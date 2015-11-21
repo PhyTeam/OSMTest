@@ -30,10 +30,15 @@ import org.osmdroid.views.overlay.OverlayItem;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.*;
+import com.loopj.android.http.*;
+
+import cz.msebera.android.httpclient.Header;
+
 public class MainActivity extends AppCompatActivity {
 
     private List<OverlayItem> pList = new ArrayList<OverlayItem>();
-
+    private List<UserData> listUser;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,7 +69,13 @@ public class MainActivity extends AppCompatActivity {
         map.getOverlays().add(test);
         try {
             LocationManager manager = getLocationManager();
-            Location loc = manager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            List<String> providers = manager.getProviders(true);
+            Location loc = null;
+            for(String p : providers) {
+                loc = manager.getLastKnownLocation(p);
+                if(loc == null) continue;
+            }
+
             GeoPoint point = new GeoPoint(loc);
             mapController.setCenter(point);
             mapController.animateTo(point);
@@ -74,9 +85,16 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         catch (SecurityException e){
-
         }
+        catch (NullPointerException e){}
 
+
+        // test
+        try {
+            Inter2ServerUsage testget = new Inter2ServerUsage();
+            testget.getListUser();
+        }
+        catch (Exception e) {}
     }
 
 
@@ -86,9 +104,8 @@ public class MainActivity extends AppCompatActivity {
             Location loc = manager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             if(loc != null) showMessage(loc);
         }
-        catch (SecurityException e){
-
-        }
+        catch (SecurityException e){}
+        catch (NullPointerException e) {}
         return manager;
 
     }
@@ -105,7 +122,18 @@ public class MainActivity extends AppCompatActivity {
         });
         alerBuilder.create().show();
     }
-
+    protected void ShowUser(String str){
+        AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
+        alerBuilder.setTitle("UserInfo");
+        alerBuilder.setMessage(str);
+        alerBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        alerBuilder.create().show();
+    }
     class MyOverlayer extends ItemizedIconOverlay<OverlayItem> {
         private List<OverlayItem> pList;
         public MyOverlayer(List<OverlayItem> pList,org.osmdroid.views.overlay.ItemizedIconOverlay.OnItemGestureListener<OverlayItem> pOnItemGestureListener,
@@ -113,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
         {
             super(pList, pOnItemGestureListener, pResourceProxy);
             this.pList = pList;
+
         }
         @Override
         protected void draw(Canvas canvas, MapView mapView, boolean shadow) {
@@ -126,6 +155,56 @@ public class MainActivity extends AppCompatActivity {
                     canvas.drawBitmap(bm,out.x - bm.getWidth()/2,out.y - bm.getHeight()/2,null);
                 }
             }
+
         }
     }
+    class Inter2ServerUsage {
+        private String url = "";
+        public void postUser(RequestParams rq) throws JSONException {
+            Inter2Server.post(url,rq,new JsonHttpResponseHandler(){
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                    // If the response is JSONObject instead of expected JSONArray
+                    MainActivity.this.ShowUser("hdsjf");
+                }
+
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONArray res) {
+                    // Pull out the first event on the public timeline
+                    // TODO
+
+                }
+            });
+        }
+        public void getListUser() throws JSONException {//RequestParams rq
+            Inter2Server.get(url, null, new JsonHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                    // If the response is JSONObject instead of expected JSONArray
+                    MainActivity.this.ShowUser("aaaa");
+                }
+
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONArray res) {
+                    // Pull out the first event on the public timeline
+                    // TODO
+                    MainActivity.this.ShowUser(res.toString());
+//                    for (int i = 0; i<res.length();i++){
+//                        try {
+//                            JSONObject obj = res.getJSONObject(i);
+//
+//                        }
+//                        catch (Exception e) {}
+//                    }
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                    //super.onFailure(statusCode, headers, responseString, throwable);
+                    //MainActivity.this.ShowUser("aaaa");
+                }
+            });
+        }
+    }
+
 }
