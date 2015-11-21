@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
             GeoPoint point = new GeoPoint(loc);
             mapController.setCenter(point);
             mapController.animateTo(point);
-            pList.add(new OverlayItem("Heere","dfd", new GeoPoint(loc)));
+            pList.add(new OverlayItem("Heere", "dfd", new GeoPoint(loc)));
 
         } catch (IllegalAccessException e) {
             e.printStackTrace();
@@ -88,13 +88,9 @@ public class MainActivity extends AppCompatActivity {
         }
         catch (NullPointerException e){}
 
+        //test
+        getListUser();
 
-        // test
-        try {
-            Inter2ServerUsage testget = new Inter2ServerUsage();
-            testget.getListUser();
-        }
-        catch (Exception e) {}
     }
 
 
@@ -134,6 +130,26 @@ public class MainActivity extends AppCompatActivity {
         });
         alerBuilder.create().show();
     }
+    protected void AddUser(String name, GeoPoint geo) {
+        try {
+            // set the request
+            RequestParams rq = new RequestParams();
+            rq.put("username","nam");
+            rq.put("pass","12345678");
+            rq.put("fullname","DoanNhatNam");
+            rq.put("gender","true");
+            Inter2ServerUsage server = new Inter2ServerUsage();
+            server.postUser(rq);
+        }
+        catch (Exception e) {}
+    }
+    protected void getListUser() {
+        try {
+            Inter2ServerUsage testget = new Inter2ServerUsage();
+            testget.getListUser();
+        }
+        catch (Exception e) {}
+    }
     class MyOverlayer extends ItemizedIconOverlay<OverlayItem> {
         private List<OverlayItem> pList;
         public MyOverlayer(List<OverlayItem> pList,org.osmdroid.views.overlay.ItemizedIconOverlay.OnItemGestureListener<OverlayItem> pOnItemGestureListener,
@@ -165,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     // If the response is JSONObject instead of expected JSONArray
-                    MainActivity.this.ShowUser("hdsjf");
+                    MainActivity.this.ShowUser("success");
                 }
 
                 @Override
@@ -177,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
             });
         }
         public void getListUser() throws JSONException {//RequestParams rq
-            Inter2Server.get(url, null, new JsonHttpResponseHandler() {
+            Inter2Server.get("", null, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     // If the response is JSONObject instead of expected JSONArray
@@ -188,14 +204,22 @@ public class MainActivity extends AppCompatActivity {
                 public void onSuccess(int statusCode, Header[] headers, JSONArray res) {
                     // Pull out the first event on the public timeline
                     // TODO
-                    MainActivity.this.ShowUser(res.toString());
-//                    for (int i = 0; i<res.length();i++){
-//                        try {
-//                            JSONObject obj = res.getJSONObject(i);
-//
-//                        }
-//                        catch (Exception e) {}
-//                    }
+                    //MainActivity.this.ShowUser(res.toString());
+                    for (int i = 0; i<res.length();i++){
+                        try {
+                            // get user infor
+                            JSONObject obj = res.getJSONObject(i);
+                            String name = obj.getString("username");
+                            // find user
+//                            for (UserData x: listUser ) {
+//                                if (x.setUsername() == name)
+//                            }
+                            UserData us = new UserData(name,null);
+                            listUser.add(us);
+                            MainActivity.this.ShowUser(name);
+                        }
+                        catch (Exception e) {}
+                    }
                 }
 
                 @Override
