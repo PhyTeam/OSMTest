@@ -38,7 +38,7 @@ import cz.msebera.android.httpclient.Header;
 public class MainActivity extends AppCompatActivity {
 
     private List<OverlayItem> pList = new ArrayList<OverlayItem>();
-    private List<UserData> listUser;
+    private List<UserData> listUser = new ArrayList<UserData>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
         catch (NullPointerException e){}
 
         //test
+        AddUser("NhatNam",null);
         getListUser();
 
     }
@@ -118,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         });
         alerBuilder.create().show();
     }
-    protected void ShowUser(String str){
+    protected void showUser(String str){
         AlertDialog.Builder alerBuilder = new AlertDialog.Builder(MainActivity.this);
         alerBuilder.setTitle("UserInfo");
         alerBuilder.setMessage(str);
@@ -136,12 +137,20 @@ public class MainActivity extends AppCompatActivity {
             RequestParams rq = new RequestParams();
             rq.put("username","nam");
             rq.put("pass","12345678");
+            rq.put("kind", JSONObject.numberToString(1));
             rq.put("fullname","DoanNhatNam");
-            rq.put("gender","true");
+            rq.put("gender",true);
+            rq.put("dob",JSONObject.NULL);
+            rq.put("email",JSONObject.NULL);
+            rq.put("avatar",JSONObject.NULL);
+            rq.put("address",JSONObject.NULL);
+            rq.put("profile",JSONObject.NULL);
             Inter2ServerUsage server = new Inter2ServerUsage();
             server.postUser(rq);
         }
-        catch (Exception e) {}
+        catch (Exception e) {
+            MainActivity.this.showUser("Post failed");
+        }
     }
     protected void getListUser() {
         try {
@@ -181,14 +190,20 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     // If the response is JSONObject instead of expected JSONArray
-                    MainActivity.this.ShowUser("success");
+                    MainActivity.this.showUser("success");
                 }
 
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONArray res) {
                     // Pull out the first event on the public timeline
                     // TODO
+                    showUser("success");
+                }
 
+                @Override
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                    //super.onFailure(statusCode, headers, responseString, throwable);
+                    showUser((String.valueOf(statusCode)));
                 }
             });
         }
@@ -197,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     // If the response is JSONObject instead of expected JSONArray
-                    MainActivity.this.ShowUser("aaaa");
+                    MainActivity.this.showUser("aaaa");
                 }
 
                 @Override
@@ -205,10 +220,11 @@ public class MainActivity extends AppCompatActivity {
                     // Pull out the first event on the public timeline
                     // TODO
                     //MainActivity.this.ShowUser(res.toString());
-                    for (int i = 0; i<res.length();i++){
+                    for (int i = 0; i < res.length() ;i++){
                         try {
                             // get user infor
                             JSONObject obj = res.getJSONObject(i);
+                            //MainActivity.this.ShowUser(obj.getString("username"));
                             String name = obj.getString("username");
                             // find user
 //                            for (UserData x: listUser ) {
@@ -216,9 +232,11 @@ public class MainActivity extends AppCompatActivity {
 //                            }
                             UserData us = new UserData(name,null);
                             listUser.add(us);
-                            MainActivity.this.ShowUser(name);
+                            MainActivity.this.showUser(obj.getString("username"));
                         }
-                        catch (Exception e) {}
+                        catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
 
